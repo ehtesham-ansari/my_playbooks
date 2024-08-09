@@ -1,0 +1,27 @@
+---
+- name:  Automating the creation of users and manage their SSH keys.
+  hosts: all
+  become: yes
+
+  vars:
+    users:
+      - { name: "alice", password: "{{ 'password' | password_hash('sha512') }}" }
+      - { name: "bob", password: "{{ 'password' | password_hash('sha512') }}" }
+
+  tasks:
+    - name: Create users
+      ansible.builtin.user:
+        name: "{{ item.name }}"
+        password: "{{ item.password }}"
+        state: present
+      with_items: "{{ users }}"
+
+    - name: Deploy SSH keys
+      ansible.builtin.copy:
+        src: /path/to/public_keys/{{ item.name }}.pub
+        dest: /home/{{ item.name }}/.ssh/authorized_keys
+        mode: '0600'
+        owner: "{{ item.name }}"
+        group: "{{ item.name }}"
+      with_items: "{{ users }}"
+

@@ -1,0 +1,40 @@
+---
+- name: playbook for storage.yml
+  hosts: all
+  tasks:
+    - block:
+        - name: Create a logical volume of 1500M
+          lvol:
+            vg: research
+            lv: data
+            size: 1500m
+          register: lv_info
+          when: ansible_lvm.vgs.research.size_g > '1500m'
+      rescue:
+        - debug:
+            var: lv_info
+
+        - debug:
+            msg: " VG Not found"
+          when: '"does not exist" in lv_info.msg'
+        
+        - debug:
+            msg: "LV Cannot be created with following size"
+          when: '"insufficient free space" in lv_info.err'
+        
+        - name: Create a logical volume of 800M
+          lvol:
+            vg: research
+            lv: data
+            size: 800m
+          register: lv_info_new
+          when: '"insufficient free space" in lv_info.err'
+        
+        - debug:
+            var: lv_info_new
+      always:
+        - name: create filesystem
+          filesystem:
+            fstype: ext4
+            dev: "/dev/research/data"
+          when: ansible_lvm.vgs.research is defined

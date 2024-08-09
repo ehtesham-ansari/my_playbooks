@@ -1,0 +1,10 @@
+---
+- name: generating hosts file /etc/myhosts on all the hostsgroup using template hosts.j2.
+  hosts: all
+  vars:
+    dest: "/etc/myhosts"
+  tasks: 
+    - template:
+        src: hosts.j2
+        dest: "{{ dest }}"
+      When: inventory_hostname in groups['dev'] 

@@ -1,0 +1,16 @@
+---
+- name: Automating the update of all packages and reboot if necessary.
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Update all packages
+      ansible.builtin.yum:
+        name: '*'
+        state: latest
+
+    - name: Reboot if needed
+      ansible.builtin.reboot:
+        msg: "Reboot triggered by package updates"
+        when: ansible_facts['pkg_mgr'] == 'yum'
+
